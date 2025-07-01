@@ -2,68 +2,77 @@ from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-def calculate_bmi(weight, height):
-    height_m = height / 100  # cm to meters
-    bmi = weight / (height_m ** 2)
-    return round(bmi, 2)
+class BMI:
+    def __init__(self, weight_kg, height_cm):
+        self.lower_limit_bmi = 18.5
+        self.upper_limit_bmi = 25
 
-def assess_bmi(bmi):
-    if bmi < 18.5:
-        return "Underweight"
-    elif 18.5 <= bmi < 24.9:
-        return "Normal weight"
-    elif 25 <= bmi < 29.9:
-        return "Overweight"
-    else:
-        return "Obese"
+        self.weight = weight_kg
+        self.height_cm = height_cm
+        self.height_m = height_cm / 100
+        self.bmi = self.get_bmi()
 
-def calculate_upper_limit_kg(height):
-    upper_limit = 24.9
-    height_m = height / 100  # cm to meters
-    weight = upper_limit * (height_m ** 2)
-    return round(weight, 2)
+    def get_bmi(self):
+        try:
+            return round(self.weight / (self.height_m ** 2), 2)
+        except ZeroDivisionError:
+            return 0
+    
+    def get_category(self):
+        if self.bmi < self.lower_limit_bmi:
+            return "Underweight"
+        elif self.lower_limit_bmi <= self.bmi < self.upper_limit_bmi:
+            return "Normal weight"
+        elif self.upper_limit_bmi <= self.bmi < 30:
+            return "Overweight"
+        else:
+            return "Obese"
+    
+    def get_upper_limit_kg(self):
+        limit_kg = self.upper_limit_bmi * (self.height_m ** 2)
+        return round(limit_kg, 2)
 
-
-def calculate_lower_limit_kg(height):
-    lower_limit = 18.5
-    height_m = height / 100  # cm to meters
-    weight = lower_limit * (height_m ** 2)
-    return round(weight, 2)
-
-def calculate_weight_diff(weight, limit):
-    return round(abs(limit - weight),2)
+    def get_lower_limit_kg(self):
+        limit_kg = self.lower_limit_bmi * (self.height_m ** 2)
+        return round(limit_kg, 2)
+    
+    def get_diff_kg(self):
+        if self.bmi < self.lower_limit_bmi:
+            return round(self.get_lower_limit_kg() - self.weight, 2)
+        elif self.bmi > self.upper_limit_bmi:
+            return round(self.weight - self.get_upper_limit_kg(), 2)
+        else:
+            return 0
+        
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    result = None
-    suggestion = None
-    suggested_weight = None
+    context ={
+        "result" : None,
+        "suggestion" : None,
+        "suggested_weight" : None 
+    }
 
     if request.method == "POST":
         try:
             weight = float(request.form["weight"])
             height = float(request.form["height"])
-            bmi = calculate_bmi(weight, height)
-            category = assess_bmi(bmi)
-            upper_limit_weight = calculate_upper_limit_kg(height)
-            lower_limit_weight = calculate_lower_limit_kg(height)
             
+            bmi_obj = BMI(weight, height)
+            context["result"] = f"Your BMI is {bmi_obj.bmi} ({bmi_obj.get_category()})"
+            context["suggested_weight"] = f"Your ideal weight range is {bmi_obj.get_lower_limit_kg()} - {bmi_obj.get_upper_limit_kg()} kg"
+            
+            if bmi_obj.get_category() == "Underweight":
+                context["suggestion"] = f"You need to gain at least {bmi_obj.get_diff_kg()} kg"
+            elif bmi_obj.get_category() == "Normal weight":
+                context["suggestion"] = f"You are in a healthy weight range"
+            elif bmi_obj.get_category() in ("Overweight", "Obese"):
+                context["suggestion"] = f"You need to lose at least {bmi_obj.get_diff_kg()} kg"
 
-            result = f"Your BMI is {bmi} ({category})"
-            suggested_weight = f"Your ideal weight range is {lower_limit_weight} - {upper_limit_weight} kg"
-
-            if bmi < 18.5:
-                weight_diff = calculate_weight_diff(weight, lower_limit_weight)
-                suggestion = f"You need to gain at least {weight_diff} kg"
-            elif bmi > 24.9:
-                weight_diff = calculate_weight_diff(weight, upper_limit_weight)
-                suggestion = f"You need to lose at least {weight_diff} kg"
-            else:
-                suggestion = f"You are in a healthy weight range"   
-        
         except ValueError:
             result = "Invalid input. Please enter numbers only."
-    return render_template("index.html", result=result, suggested_weight=suggested_weight, suggestion=suggestion)
+        
+    return render_template("index.html", **context)
 
 if __name__ == "__main__":
     app.run(debug=True)
