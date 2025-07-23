@@ -1,0 +1,13 @@
+[tool.poetry]
+name = "app"
+version = "0.0.1"
+description = "Weight Loss Made Simple"
+authors = ["Ludacrispy"]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.12"
+uvicorn = {extras=["standard"], version="~0.23.0"}
+fastapi = "^0.104.0"
+python-multipart = "~0.0.5"
+pydantic = {extras = ["email"], version = ">=2.0"}
+playwright = "^1.44.0"
