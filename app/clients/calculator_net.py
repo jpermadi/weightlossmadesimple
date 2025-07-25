@@ -1,10 +1,6 @@
-# from fastapi import FastAPI, APIRouter
-# from typing import Optional
 from app.models.schemas import BMI
-import asyncio
 from playwright.async_api import async_playwright
 
-# api_router = APIRouter()
 
 async def get_bmi(*, age, height_cm, weight_kg):
     """
@@ -59,19 +55,3 @@ async def get_bmi(*, age, height_cm, weight_kg):
         await browser.close()
 
         return BMI(age=age, height=height_cm, weight=weight_kg, bmi=bmi_value, category=bmi_category)
-
-
-# # GET BMI value 
-# @api_router.get("/calculate-bmi/", status_code=200, response_model=BMI)
-# async def calculate_bmi(
-#     *,
-#     age: Optional[int] = 25,
-#     height_cm: int,
-#     weight_kg: int
-# ) -> BMI:
-#     """
-#     Get BMI value and category from calculator.net
-#     """
-
-#     return await api_get_bmi(age=age, height_cm=height_cm, weight_kg=weight_kg)
-    
