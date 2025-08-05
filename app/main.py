@@ -1,13 +1,17 @@
-# Import necessary modules and classes (FastAPI, Pydantic, etc.)
+# Standard imports
+
+# Third party imports
 from fastapi import FastAPI, APIRouter, Query
 from typing import Optional
+
+# Local imports
 from app.data.bmi_data import BMI_DATA
 from app.models.schemas import BMI, BMISearchResult
-from app.api.api_v1.api import api_router
+from app.api.v1.api import api_router
 from app.core.config import settings
 
 
-# ============================================================================= 77
+# =============================================================================
 # PROJECT INIT
 # =============================================================================
 app = FastAPI(title="Weight Loss Made Simple", openapi_url="/openapi.json")
@@ -23,7 +27,7 @@ def root() -> dict:
     return {"msg": "Hello, World!"}
 
 
-# ============================================================================= 77
+# =============================================================================
 # INCLUDE ROUTES
 # =============================================================================
 app.include_router(root_router)
